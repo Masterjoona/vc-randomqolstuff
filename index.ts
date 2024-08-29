@@ -6,32 +6,58 @@
 
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
+import { findStoreLazy } from "@webpack";
+
+const DimensionStore = findStoreLazy("DimensionStore");
 
 const settings = definePluginSettings({
     autoOpenUserDmMutuals: {
         description: "Auto open mutual friends and guilds in dms",
         type: OptionType.BOOLEAN,
-        default: true
+        default: false,
+        restartNeeded: true,
     },
     showAllFriendsAndGuilds: {
-        description: "Show all friends and guilds in user popout",
+        description: "Show all friends and guilds in user popout instead of max 3",
         type: OptionType.BOOLEAN,
-        default: true
+        default: false,
+        restartNeeded: true
     },
     ClickUsersOnPopout: {
         description: "Clicking on a user in the user popout opens their profile",
         type: OptionType.BOOLEAN,
-        default: true
+        default: false,
+        restartNeeded: true
     },
     ClickServersOnPopout: {
         description: "Clicking on a server in the user popout navigates to the server",
         type: OptionType.BOOLEAN,
-        default: true
+        default: false,
+        restartNeeded: true
     },
     copyMediaOnDiscordUrls: {
         description: "Allows copying media on cdn discord urls",
         type: OptionType.BOOLEAN,
-        default: true
+        default: false,
+        restartNeeded: true
+    },
+    OpenAddConnectionInBrowser: {
+        description: "Open the add connection in browser (doesnt make a difference on desktop discord)",
+        type: OptionType.BOOLEAN,
+        default: false,
+        restartNeeded: true
+    },
+    PressEscOldReply: {
+        description: "When viewing old messages and wanting to reply and pressing esc will now scroll to the bottom instead of closing the reply",
+        type: OptionType.BOOLEAN,
+        default: false,
+        restartNeeded: true,
+    },
+    InboxMutedFavorites: {
+        description: "Inbox favorited channels notifications from servers/categories that are muted",
+        type: OptionType.BOOLEAN,
+        default: false,
+        restartNeeded: true,
     }
 });
 
@@ -131,6 +157,33 @@ export default definePlugin({
             ],
             predicate: () => settings.store.copyMediaOnDiscordUrls
         },
+        {
+            find: "scrollbars=yes,",
+            replacement: {
+                match: /!\(0,\i\.isDesktop\)\(\)/,
+                replace: "false"
+            },
+            predicate: () => settings.store.OpenAddConnectionInBrowser
+        },
+        {
+            find: "shift+pagedown",
+            replacement: {
+                match: /!1===\i\(\i\)(?<=(\i)=\i\.\i.getChannelId\(\i\).+?)/,
+                replace: "($self.isAtBottom($1)&&$&)"
+            },
+            predicate: () => settings.store.PressEscOldReply
+        },
+        {
+            find: "this channel should already be loaded",
+            replacement: {
+                match: /.isGuildOrCategoryOrChannelMuted\(\i,(\i\.id)\)(?=.+?(\i\.\i\.isFavorite))/,
+                replace: "$& && !$2($1)"
+            },
+            predicate: () => settings.store.InboxMutedFavorites
+        }
     ],
-    settings
+    settings,
+    isAtBottom(channelId: string) {
+        return DimensionStore.isAtBottom(channelId);
+    }
 });
