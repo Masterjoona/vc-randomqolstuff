@@ -58,6 +58,18 @@ const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         default: false,
         restartNeeded: true,
+    },
+    ShowAllAddConnections: {
+        description: "No more view more button in add connections",
+        type: OptionType.BOOLEAN,
+        default: false,
+        restartNeeded: true
+    },
+    ShowMessageTimeStampHoverAlways: {
+        description: "Show message timestamp always instead of on hover. also adds seconds to it (probably other places too)",
+        type: OptionType.BOOLEAN,
+        default: false,
+        restartNeeded: true
     }
 });
 
@@ -73,7 +85,7 @@ export default definePlugin({
         {
             find: '"MutualFriendsList"',
             replacement: {
-                match: /useState\(!0\)/,
+                match: /useState\(!\i\)/,
                 replace: "useState(!1)"
             },
             predicate: () => settings.store.autoOpenUserDmMutuals
@@ -86,8 +98,8 @@ export default definePlugin({
                     replace: "max$1:Infinity",
                 },
                 {
-                    match: /children:(?=\i\.\i\.Messages)/g,
-                    replace: "$&true?null:",
+                    match: /\(0,\i\.jsxs?\)\(\i\.Text,/g,
+                    replace: "false&&$&",
                 },
                 {
                     match: /\[!\i(?<=MUTUAL_GUILDS.{12,16})/,
@@ -180,6 +192,34 @@ export default definePlugin({
                 replace: "$& && !$2($1)"
             },
             predicate: () => settings.store.InboxMutedFavorites
+        },
+        {
+            find: "__invalid_accountButton)",
+            replacement: [
+                {
+                    match: /slice\(0,10\)\./,
+                    replace: ""
+                },
+                {
+                    match: /.accountButtonInner},\i.type\)\),/,
+                    replace: "$&false&&"
+                }
+            ],
+            predicate: () => settings.store.ShowAllAddConnections
+        },
+        {
+            find: ".timestampVisibleOnHover]:",
+            replacement: [
+                {
+                    match: /.timestampVisibleOnHover\]:\i/,
+                    replace: ".timestampVisibleOnHover]:false"
+                },
+                {
+                    match: /"LT"/,
+                    replace: '"LTS"'
+                }
+            ],
+            predicate: () => settings.store.ShowMessageTimeStampHoverAlways
         }
     ],
     settings,
