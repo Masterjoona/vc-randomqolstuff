@@ -5,8 +5,10 @@
  */
 
 import { definePluginSettings } from "@api/Settings";
+import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import { findStoreLazy } from "@webpack";
+import { NavigationRouter } from "@webpack/common";
 
 const DimensionStore = findStoreLazy("DimensionStore");
 
@@ -70,17 +72,21 @@ const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         default: false,
         restartNeeded: true
+    },
+    InboxJump: {
+        description: "Pressing j in the inbox will jump to the unread message",
+        type: OptionType.BOOLEAN,
+        default: false,
+        restartNeeded: true
     }
 });
 
 
 export default definePlugin({
     name: "randomQOLStuff",
-    authors: [{
-        name: "Joona",
-        id: 297410829589020673n
-    }],
+    authors: [Devs.Joona],
     description: "Random QOL stuff",
+    settings,
     patches: [
         {
             find: '"MutualFriendsList"',
@@ -220,10 +226,23 @@ export default definePlugin({
                 }
             ],
             predicate: () => settings.store.ShowMessageTimeStampHoverAlways
+        },
+        {
+            find: ".clearScrollToChannelIndex();",
+            replacement: {
+                match: /(MARK_TOP_INBOX_CHANNEL_READ,\i\),)(\(\)=>{)/,
+                replace: '$1jumpMessage=click=>{$self.inboxJumpKeydown(click,e.channels.find(e=>!e.collapsed))},document.addEventListener("keydown",jumpMessage),$2document.removeEventListener("keydown",jumpMessage);'
+            },
+            predicate: () => settings.store.InboxJump
         }
     ],
-    settings,
     isAtBottom(channelId: string) {
         return DimensionStore.isAtBottom(channelId);
+    },
+    inboxJumpKeydown(e: KeyboardEvent, weirdChannel) {
+        if (e.key === "j" && weirdChannel != null) {
+            NavigationRouter.transitionTo(`/channels/${weirdChannel.guildId}/${weirdChannel.channelId}/${weirdChannel.newestUnreadMessageId}`);
+            e.preventDefault();
+        }
     }
 });
