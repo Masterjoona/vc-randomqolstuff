@@ -38,7 +38,7 @@ const settings = definePluginSettings({
         restartNeeded: true
     },
     copyMediaOnDiscordUrls: {
-        description: "Allows copying media on cdn discord urls",
+        description: "Allows copying media on cdn discord urls (like pfps or banners)",
         type: OptionType.BOOLEAN,
         default: false,
         restartNeeded: true
@@ -100,7 +100,7 @@ export default definePlugin({
             find: '"text-xs/normal":"text-sm/normal";',
             replacement: [
                 {
-                    match: /max(Users|Guilds):\d/g,
+                    match: /max(Users|Guilds):(?:\d|\i)/g,
                     replace: "max$1:Infinity",
                 },
                 {
@@ -169,8 +169,8 @@ export default definePlugin({
             find: 'id:"copy-image"',
             replacement: [
                 {
-                    match: /return null!/,
-                    replace: "return true || null!"
+                    match: /\(0,\i\.\i\)\(\i\)\?/,
+                    replace: "true?"
                 }
             ],
             predicate: () => settings.store.copyMediaOnDiscordUrls
@@ -230,8 +230,8 @@ export default definePlugin({
         {
             find: ".clearScrollToChannelIndex();",
             replacement: {
-                match: /(MARK_TOP_INBOX_CHANNEL_READ,\i\),)(\(\)=>{)/,
-                replace: '$1jumpMessage=click=>{$self.inboxJumpKeydown(click,e.channels.find(e=>!e.collapsed))},document.addEventListener("keydown",jumpMessage),$2document.removeEventListener("keydown",jumpMessage);'
+                match: /(MARK_TOP_INBOX_CHANNEL_READ,\i\),)(\(\)=>{)(?=.+?(\i\.channels))/,
+                replace: '$1jumpMessage=press=>{$self.inboxJumpKeydown(press,$3.find(c=>!c.collapsed))},document.addEventListener("keydown",jumpMessage),$2document.removeEventListener("keydown",jumpMessage);'
             },
             predicate: () => settings.store.InboxJump
         }
