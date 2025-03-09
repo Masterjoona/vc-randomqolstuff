@@ -241,7 +241,7 @@ export default definePlugin({
     },
     inboxJumpKeydown(e: KeyboardEvent, weirdChannel) {
         if (e.key === "j" && weirdChannel != null) {
-            NavigationRouter.transitionTo(`/channels/${weirdChannel.guildId}/${weirdChannel.channelId}/${weirdChannel.newestUnreadMessageId}`);
+            NavigationRouter.transitionTo(`/channels/${weirdChannel.guildId || "@me"}/${weirdChannel.channelId}/${weirdChannel.newestUnreadMessageId}`);
             e.preventDefault();
         }
     }
