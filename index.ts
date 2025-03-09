@@ -89,10 +89,10 @@ export default definePlugin({
     settings,
     patches: [
         {
-            find: '"MutualFriendsList"',
+            find: 'action:"PRESS_SECTION"',
             replacement: {
-                match: /useState\(!\i\)/,
-                replace: "useState(!1)"
+                match: /useState\(!1\)/,
+                replace: "useState(true)"
             },
             predicate: () => settings.store.autoOpenUserDmMutuals
         },
